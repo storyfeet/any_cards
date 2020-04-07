@@ -1,6 +1,6 @@
-use clap_conf::*;
+use clap_conf::prelude::*;
 
-fn main() {
+fn main() -> Result<(), ConfError> {
     let clp = clap_app!(any_cards =>
         (about:"Makes any kind of svg card using handlebars templates")
         (version:crate_version!())
@@ -11,5 +11,11 @@ fn main() {
     )
     .get_matches();
 
-    println!("Hello, world!");
+    let cfg = with_toml_env(&clp, &["any_conf.toml"]);
+
+    for v in cfg.grab_multi().arg("files").req()? {
+        println!("File = {:?}", v)
+    }
+
+    Ok(())
 }
