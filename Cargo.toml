@@ -12,3 +12,5 @@ clap_conf = {path="../../mlibs/clap_conf/"}
 handlebars = "3.0.1"
 failure = "0.1.7"
 mksvg = {path="../../mlibs/mksvg/"}
+serde = "1.0.106"
+serde_derive = "1.0.106"

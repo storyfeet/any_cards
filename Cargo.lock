@@ -18,6 +18,8 @@ dependencies = [
  "failure",
  "handlebars",
  "mksvg",
+ "serde",
+ "serde_derive",
 ]
 
 [[package]]

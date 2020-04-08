@@ -1,0 +1,7 @@
+dog:
+.tx:"Woof"
+.do:"scurry"
+
+cat:
+.tx:"meow"
+.do:"climb"
