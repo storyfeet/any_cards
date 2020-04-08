@@ -1,0 +1,9 @@
+files = ["test_data/card_list.cards"]
+template = "t1.svgt"
+out_base="test_out/t1"
+[grid]
+width=3
+heigh = 2
+
+
+

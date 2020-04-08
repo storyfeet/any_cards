@@ -264,6 +264,7 @@ name = "mksvg"
 version = "0.2.1"
 dependencies = [
  "failure",
+ "failure_derive",
  "num",
 ]
 

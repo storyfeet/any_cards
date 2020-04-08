@@ -1,12 +1,27 @@
+mod helpers;
 use card_format::CData;
 //use card_format::Card as FCard;
 use clap_conf::prelude::*;
-use handlebars::Handlebars;
+//use handlebars::Handlebars;
 //use mksvg::Card as SCard;
 //use mksvg::SvgWrite;
+use failure::Fail;
 use serde_derive::Serialize;
 use std::collections::BTreeMap;
 use std::io::Read;
+
+#[derive(Fail, Debug)]
+#[fail(display = "{}{}", s, e)]
+pub struct QErr<E: Fail> {
+    e: E,
+    s: String,
+}
+pub fn q_err<E: Fail>(s: &str, e: E) -> QErr<E> {
+    QErr {
+        s: s.to_string(),
+        e,
+    }
+}
 
 #[derive(Serialize)]
 struct CWH<'a> {
@@ -34,7 +49,7 @@ fn main() -> Result<(), failure::Error> {
 
     let cfg = with_toml_env(&clp, &["any_conf.toml"]);
 
-    let mut tplate = Handlebars::new();
+    let mut tplate = helpers::help_template();
 
     //TODO Read template in
     let tfname = cfg
@@ -43,14 +58,14 @@ fn main() -> Result<(), failure::Error> {
         .conf("template")
         .env("ANY_CARD_TEMPLATE")
         .def("front_temp.svg");
-    let mut tfile = std::fs::File::open(tfname)?;
+    let mut tfile = std::fs::File::open(&tfname).map_err(|e| q_err(&format!("{:?}", tfname), e))?;
     let mut tfs = String::new();
     tfile.read_to_string(&mut tfs)?;
     tplate.register_template_string("front", tfs)?;
 
     let mut all_cards = Vec::new();
-    for fname in cfg.grab_multi().arg("files").req()? {
-        let mut f = std::fs::File::open(fname)?;
+    for fname in cfg.grab_multi().arg("files").conf("files").req()? {
+        let mut f = std::fs::File::open(&fname).map_err(|e| q_err(&format!("{:?}", fname), e))?;
         let loaded_cards = card_format::load_cards(&mut f)?;
         all_cards.extend(loaded_cards);
     }
@@ -70,7 +85,7 @@ fn main() -> Result<(), failure::Error> {
     if let (Some(w), Some(h)) = (g_width, g_height) {
         svb = svb.grid_size(w, h);
     }
-    let (_, pages) = svb.write_pages(
+    let (_, _pages) = svb.write_pages(
         f_base,
         &mut mksvg::iter::spread(&all_cards, |c| c.num),
         &|wr, w, h, c| {
