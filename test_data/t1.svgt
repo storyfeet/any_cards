@@ -1,3 +1,4 @@
 <rect x="0" y="0" width="{{mul_f w 0.5}}" height="{{h }}" fill="red" stroke="black" stroke-width="5"/>
 <text x="50" y = "50" fill="white">{{data.tx}}</text>
+{{#each (wrap data.tx 3)}}<{{@index}}>{{/each}}
 

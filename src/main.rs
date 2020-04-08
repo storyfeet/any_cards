@@ -88,15 +88,16 @@ fn main() -> Result<(), failure::Error> {
     let (_, _pages) = svb.write_pages(
         f_base,
         &mut mksvg::iter::spread(&all_cards, |c| c.num),
-        &|wr, w, h, c| {
+        &|wr, w, h, c| -> Result<(), handlebars::RenderError> {
             let cwh = CWH {
                 name: &c.name,
                 w,
                 h,
                 data: &c.data,
             };
-            let rs = tplate.render("front", &cwh).unwrap_or(String::new());
+            let rs = tplate.render("front", &cwh)?;
             wr.write(&rs);
+            Ok(())
         },
     )?;
 
