@@ -1,13 +1,17 @@
-mod helpers;
-use card_format::CData;
+//mod helpers;
+//#[macro_use]
+//extern crate gtmpl_derive;
+mod go_temp;
+//use card_format::CData;
 //use card_format::Card as FCard;
 use clap_conf::prelude::*;
 //use handlebars::Handlebars;
 //use mksvg::Card as SCard;
 //use mksvg::SvgWrite;
 use failure::Fail;
-use serde_derive::Serialize;
-use std::collections::BTreeMap;
+use gtmpl::Context;
+//use serde_derive::Serialize;
+//use std::collections::BTreeMap;
 use std::io::Read;
 
 #[derive(Fail, Debug)]
@@ -23,12 +27,13 @@ pub fn q_err<E: Fail>(s: &str, e: E) -> QErr<E> {
     }
 }
 
-#[derive(Serialize)]
-struct CWH<'a> {
-    name: &'a str,
-    w: f64,
-    h: f64,
-    data: &'a BTreeMap<String, CData>,
+#[derive(Fail, Debug)]
+#[fail(display = "String Err{}", 0)]
+pub struct StrErr(String);
+impl From<String> for StrErr {
+    fn from(s: String) -> Self {
+        StrErr(s)
+    }
 }
 
 fn main() -> Result<(), failure::Error> {
@@ -49,7 +54,7 @@ fn main() -> Result<(), failure::Error> {
 
     let cfg = with_toml_env(&clp, &["any_conf.toml"]);
 
-    let mut tplate = helpers::help_template();
+    let mut template = go_temp::helper_template();
 
     //TODO Read template in
     let tfname = cfg
@@ -61,7 +66,7 @@ fn main() -> Result<(), failure::Error> {
     let mut tfile = std::fs::File::open(&tfname).map_err(|e| q_err(&format!("{:?}", tfname), e))?;
     let mut tfs = String::new();
     tfile.read_to_string(&mut tfs)?;
-    tplate.register_template_string("front", tfs)?;
+    template.parse(tfs).map_err(|e| StrErr(e))?;
 
     let mut all_cards = Vec::new();
     for fname in cfg.grab_multi().arg("files").conf("files").req()? {
@@ -83,19 +88,15 @@ fn main() -> Result<(), failure::Error> {
         svb = svb.card_size(w, h);
     }
     if let (Some(w), Some(h)) = (g_width, g_height) {
+        println!("Grid loaded");
         svb = svb.grid_size(w, h);
     }
     let (_, _pages) = svb.write_pages(
         f_base,
         &mut mksvg::iter::spread(&all_cards, |c| c.num),
-        &|wr, w, h, c| -> Result<(), handlebars::RenderError> {
-            let cwh = CWH {
-                name: &c.name,
-                w,
-                h,
-                data: &c.data,
-            };
-            let rs = tplate.render("front", &cwh)?;
+        &|wr, w, h, c| -> Result<(), StrErr> {
+            let cw = go_temp::CWH::new(&c.name, w, h, &c.data);
+            let rs = template.render(&Context::from(cw)?)?;
             wr.write(&rs);
             Ok(())
         },

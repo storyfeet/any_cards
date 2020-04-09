@@ -5,3 +5,9 @@ dog:
 cat:
 .tx:"meow"
 .do:"climb"
+
+5 * duck:
+.tx:"I'm a duck really a duck"
+
+3 * monkey:
+.tx:"Ooh OOh"

@@ -1,4 +1,6 @@
-<rect x="0" y="0" width="{{mul_f w 0.5}}" height="{{h }}" fill="red" stroke="black" stroke-width="5"/>
-<text x="50" y = "50" fill="white">{{data.tx}}</text>
-{{#each (wrap data.tx 3)}}<{{@index}}>{{/each}}
+<rect x="0" y="0" width="{{.w }}" height="{{.h }}" {{if (eq .name "duck")}} fill="red"{{else}}fill="blue"{{end}} stroke="black" stroke-width="5"/>
+{{$w := .w}}
+{{range $k , $v := (wrap .data.tx 6) -}}
+    <text x="{{mul $w 0.5}}" y ="{{add 40 (mul 15 $k)}}" text-anchor="middle" fill="white">{{$v}}</text>
+{{end}}
 
