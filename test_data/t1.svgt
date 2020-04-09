@@ -1,6 +1,9 @@
-<rect x="0" y="0" width="{{.w }}" height="{{.h }}" {{if (eq .name "duck")}} fill="red"{{else}}fill="blue"{{end}} stroke="black" stroke-width="5"/>
+<rect {{xywh 0 0 .w .h -}}
+    {{fl_stk (b_sel (eq .name "duck") "blue" "red")  "black" 5}}
+    />
 {{$w := .w}}
+{{$h := .h}}
 {{range $k , $v := (wrap .data.tx 6) -}}
-    <text x="{{mul $w 0.5}}" y ="{{add 40 (mul 15 $k)}}" text-anchor="middle" fill="white">{{$v}}</text>
+    <text x="{{mul $w 0.5}}" y ="{{add (mul $h 0.1) (mul 0.12 $k $w)}}" text-anchor="middle" fill="white" {{fnt (mul $w 0.1) "Arial"}}>{{$v}}</text>
 {{end}}
 

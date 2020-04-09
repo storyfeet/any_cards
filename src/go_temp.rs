@@ -49,6 +49,10 @@ pub fn helper_template() -> Template {
     res.add_func("mul", mul);
     res.add_func("add", add);
     res.add_func("wrap", wrap);
+    res.add_func("xywh", xywh);
+    res.add_func("fl_stk", fl_stk);
+    res.add_func("b_sel", b_sel);
+    res.add_func("fnt", fnt);
     res
 }
 
@@ -104,4 +108,54 @@ pub fn wrap(args: &[Value]) -> Result<Value, String> {
     Ok(Value::Array(
         vs.into_iter().map(|v| Value::String(v)).collect(),
     ))
+}
+
+pub fn b_sel(args: &[Value]) -> Result<Value, String> {
+    let b_val = match args.get(0) {
+        Some(Value::Bool(b)) => *b,
+        Some(Value::Number(n)) => (*n) >= Number::from(0),
+        _ => return Err("First Expr must be bool or Num".to_string()),
+    };
+
+    if b_val {
+        return args
+            .get(1)
+            .map(|m| m.clone())
+            .ok_or("Ok Expression not supplied".to_string());
+    }
+    Ok(args
+        .get(2)
+        .map(|v| v.clone())
+        .unwrap_or(Value::String(String::new())))
+}
+
+pub fn xywh(args: &[Value]) -> Result<Value, String> {
+    let h = args.get(3).ok_or("H not supplied".to_string())?;
+    let w = args.get(2).ok_or("W not supplied".to_string())?;
+    let y = args.get(1).ok_or("Y not supplied".to_string())?;
+    let x = args.get(0).ok_or("X not supplied".to_string())?;
+    Ok(Value::String(format!(
+        r#"x="{}px" y="{}px" width="{}px" height="{}px" "#,
+        x, y, w, h
+    )))
+}
+pub fn fl_stk(args: &[Value]) -> Result<Value, String> {
+    let f = args.get(0).ok_or("Fill not supplied".to_string())?;
+    let s = args.get(1).ok_or("Stroke not supplied".to_string())?;
+    let w = args.get(2).ok_or("StrokeWidth not supplied".to_string())?;
+    //TODO add px only for numbers
+    Ok(Value::String(format!(
+        r#"fill="{}" stroke="{}" stroke-width="{}px" "#,
+        f, s, w
+    )))
+}
+
+pub fn fnt(args: &[Value]) -> Result<Value, String> {
+    let sz = args.get(0).ok_or("Font Size not supplied".to_string())?;
+    let ff = args
+        .get(1)
+        .map(|s| format!(r#"font-family="{}" "#, s))
+        .unwrap_or(String::new());
+
+    Ok(Value::String(format!(r#"font-size="{}px" {}"#, sz, ff)))
 }

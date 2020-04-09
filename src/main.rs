@@ -1,17 +1,7 @@
-//mod helpers;
-//#[macro_use]
-//extern crate gtmpl_derive;
 mod go_temp;
-//use card_format::CData;
-//use card_format::Card as FCard;
 use clap_conf::prelude::*;
-//use handlebars::Handlebars;
-//use mksvg::Card as SCard;
-//use mksvg::SvgWrite;
 use failure::Fail;
 use gtmpl::Context;
-//use serde_derive::Serialize;
-//use std::collections::BTreeMap;
 use std::io::Read;
 
 #[derive(Fail, Debug)]
