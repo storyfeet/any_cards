@@ -53,6 +53,7 @@ pub fn helper_template() -> Template {
     res.add_func("fl_stk", fl_stk);
     res.add_func("b_sel", b_sel);
     res.add_func("fnt", fnt);
+    res.add_func("ccat", ccat);
     res
 }
 
@@ -158,4 +159,12 @@ pub fn fnt(args: &[Value]) -> Result<Value, String> {
         .unwrap_or(String::new());
 
     Ok(Value::String(format!(r#"font-size="{}px" {}"#, sz, ff)))
+}
+
+pub fn ccat(args: &[Value]) -> Result<Value, String> {
+    let mut res = String::new();
+    for v in args {
+        res.push_str(&v.to_string());
+    }
+    Ok(Value::String(res))
 }

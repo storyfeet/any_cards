@@ -35,10 +35,10 @@ fn main() -> Result<(), failure::Error> {
         (@arg template: -t + takes_value "Location of template file (config template)")
         (@arg files: -f + takes_value ... "location of files for cards (config files [...])")
         (@arg out_base: -o +takes_value "Location base for output files")
-        (@arg c_width:-w + takes_value "Card width")
-        (@arg c_height:-h+ takes_value "Card width")
-        (@arg g_width: + takes_value "Card width")
-        (@arg g_height: + takes_value "Card width")
+        (@arg cwidth:-w + takes_value "Card width")
+        (@arg cheight:-h+ takes_value "Card width")
+        (@arg gwidth: + takes_value "Card width")
+        (@arg gheight: + takes_value "Card width")
     )
     .get_matches();
 
@@ -66,10 +66,10 @@ fn main() -> Result<(), failure::Error> {
     }
 
     let obase = cfg.grab().arg("out_base").conf("out_base").def("out/");
-    let c_width: Option<f64> = cfg.grab().arg("c_width").conf("card.width").t_done();
-    let c_height: Option<f64> = cfg.grab().arg("c_height").conf("card.height").t_done();
-    let g_width: Option<usize> = cfg.grab().arg("g_width").conf("grid.width").t_done();
-    let g_height: Option<usize> = cfg.grab().arg("g_height").conf("grid.height").t_done();
+    let c_width: Option<f64> = cfg.grab().arg("cwidth").conf("card.width").t_done();
+    let c_height: Option<f64> = cfg.grab().arg("cheight").conf("card.height").t_done();
+    let g_width: Option<usize> = cfg.grab().arg("gwidth").conf("grid.width").t_done();
+    let g_height: Option<usize> = cfg.grab().arg("gheight").conf("grid.height").t_done();
 
     let mut f_base = obase.clone();
     f_base.push_str("f_");
