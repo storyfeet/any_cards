@@ -170,11 +170,11 @@ fn _xml_es(s: &str) -> String {
     let mut res = String::new();
     for c in s.chars() {
         match c {
-            '&' => res.push_str("&amp"),
-            '>' => res.push_str("&gt"),
-            '<' => res.push_str("&lt"),
-            '\"' => res.push_str("&quot"),
-            '\'' => res.push_str("&#39"),
+            '&' => res.push_str("&amp;"),
+            '>' => res.push_str("&gt;"),
+            '<' => res.push_str("&lt;"),
+            '\"' => res.push_str("&quot;"),
+            '\'' => res.push_str("&apos;"),
             cv => res.push(cv),
         }
     }
