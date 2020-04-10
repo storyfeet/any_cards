@@ -3,6 +3,14 @@ use gtmpl::Template;
 use gtmpl_value::{Number, Value};
 use std::collections::{BTreeMap, HashMap};
 
+pub fn as_go_v(dt: &CData) -> Value {
+    match dt {
+        CData::S(s) | CData::R(s) => Value::String(s.to_string()),
+        CData::N(i) => Value::Number(Number::from(*i)),
+        CData::L(l) => Value::Array(l.into_iter().map(|v| as_go_v(v)).collect()),
+    }
+}
+
 pub fn go_value(name: &str, w: f64, h: f64, map: &BTreeMap<String, CData>) -> Value {
     let mut rmap = HashMap::new();
     rmap.insert("name".to_string(), Value::String(name.to_string()));
@@ -10,14 +18,7 @@ pub fn go_value(name: &str, w: f64, h: f64, map: &BTreeMap<String, CData>) -> Va
     rmap.insert("h".to_string(), Value::Number(h.into()));
     let mut data = HashMap::new();
     for (k, v) in map {
-        match v {
-            CData::S(s) | CData::R(s) => {
-                data.insert(k.to_string(), Value::String(s.to_string()));
-            }
-            CData::N(i) => {
-                data.insert(k.to_string(), Value::Number((*i).into()));
-            }
-        }
+        data.insert(k.to_string(), as_go_v(v));
     }
     rmap.insert("data".to_string(), Value::Map(data));
 
