@@ -54,6 +54,7 @@ pub fn helper_template() -> Template {
     res.add_func("b_sel", b_sel);
     res.add_func("fnt", fnt);
     res.add_func("ccat", ccat);
+    res.add_func("xml_es", xml_es);
     res
 }
 
@@ -163,6 +164,29 @@ pub fn fnt(args: &[Value]) -> Result<Value, String> {
         .unwrap_or(String::new());
 
     Ok(Value::String(format!(r#"font-size="{}px" {}"#, sz, ff)))
+}
+
+fn _xml_es(s: &str) -> String {
+    let mut res = String::new();
+    for c in s.chars() {
+        match c {
+            '&' => res.push_str("&amp"),
+            '>' => res.push_str("&gt"),
+            '<' => res.push_str("&lt"),
+            '\"' => res.push_str("&quot"),
+            '\'' => res.push_str("&#39"),
+            cv => res.push(cv),
+        }
+    }
+    res
+}
+
+pub fn xml_es(args: &[Value]) -> Result<Value, String> {
+    let mut res = String::new();
+    for a in args {
+        res.push_str(&_xml_es(&a.to_string()));
+    }
+    Ok(Value::String(res))
 }
 
 pub fn ccat(args: &[Value]) -> Result<Value, String> {
