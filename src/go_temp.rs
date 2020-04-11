@@ -56,6 +56,10 @@ pub fn helper_template() -> Template {
     res.add_func("fnt", fnt);
     res.add_func("ccat", ccat);
     res.add_func("xml_es", xml_es);
+    res.add_func("sep", sep);
+    res.add_func("is_list", is_list);
+    res.add_func("s_len", s_len);
+    res.add_func("as_list", as_list);
     res
 }
 
@@ -196,4 +200,72 @@ pub fn ccat(args: &[Value]) -> Result<Value, String> {
         res.push_str(&v.to_string());
     }
     Ok(Value::String(res))
+}
+
+fn _sep(sp: &str, args: &[Value]) -> Result<String, String> {
+    let mut first = true;
+    let mut res = String::new();
+    for a in args {
+        if !first {
+            res.push_str(sp);
+        }
+        match a {
+            Value::Array(l) => res.push_str(&_sep(sp, l)?),
+            v => res.push_str(&v.to_string()),
+        }
+
+        first = false;
+    }
+    Ok(res)
+}
+
+pub fn is_list(args: &[Value]) -> Result<Value, String> {
+    if args.len() != 1 {
+        return Err(format!("Is list expected 1 elem, got{}", args.len()));
+    }
+    Ok(Value::Bool(match args[0] {
+        Value::Map(_) | Value::Array(_) => true,
+        _ => false,
+    }))
+}
+
+pub fn v_as_list(v: &Value) -> Vec<Value> {
+    match v {
+        Value::Map(m) => m.values().map(|v| v.clone()).collect(),
+        Value::Array(l) => l.iter().map(|v| v.clone()).collect(),
+        Value::Nil | Value::NoValue => Vec::new(),
+        _ => vec![v.clone()],
+    }
+}
+
+pub fn as_list(args: &[Value]) -> Result<Value, String> {
+    if args.len() == 0 {
+        return Err("'as_list' expected at least 1 elem".to_string());
+    }
+    let mut res = Vec::new();
+    for a in args {
+        res.extend(v_as_list(a));
+    }
+    Ok(Value::Array(res))
+}
+
+// first arg is seperator, after flatten
+pub fn sep(args: &[Value]) -> Result<Value, String> {
+    if args.len() < 2 {
+        return Err("Nothing to separate".to_string());
+    }
+    let sp = args[0].to_string();
+    Ok(Value::String(_sep(&sp, &args[1..])?))
+}
+
+pub fn s_len(args: &[Value]) -> Result<Value, String> {
+    let mut res = 0;
+    for a in args {
+        res += match a {
+            Value::Map(m) => m.len(),
+            Value::Array(l) => l.len(),
+            _ => 0,
+        }
+    }
+    Ok(Value::Number(Number::from(res)))
 }
