@@ -61,7 +61,8 @@ fn main() -> Result<(), failure::Error> {
     let mut all_cards = Vec::new();
     for fname in cfg.grab_multi().arg("files").conf("files").req()? {
         let mut f = std::fs::File::open(&fname).map_err(|e| q_err(&format!("{:?}", fname), e))?;
-        let loaded_cards = card_format::load_cards(&mut f)?;
+        let loaded_cards = card_format::load_cards(&mut f)
+            .map_err(|e| q_err(&format!("file = {:?}", fname), e))?;
         all_cards.extend(loaded_cards);
     }
 
