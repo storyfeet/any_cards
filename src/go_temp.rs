@@ -277,7 +277,7 @@ pub fn v_match(args: &[Value]) -> Result<Value, String> {
     }
     let mut it = args[1..].iter();
     while let Some(n) = it.next() {
-        if n == &args[0] {
+        if n == &args[0] || n == &Value::String("$else".to_string()) {
             return it
                 .next()
                 .map(|m| m.clone())
