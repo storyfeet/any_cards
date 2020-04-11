@@ -60,6 +60,7 @@ pub fn helper_template() -> Template {
     res.add_func("is_list", is_list);
     res.add_func("s_len", s_len);
     res.add_func("as_list", as_list);
+    res.add_func("match", v_match);
     res
 }
 
@@ -268,4 +269,21 @@ pub fn s_len(args: &[Value]) -> Result<Value, String> {
         }
     }
     Ok(Value::Number(Number::from(res)))
+}
+
+pub fn v_match(args: &[Value]) -> Result<Value, String> {
+    if args.len() <= 3 {
+        return Err("match requires at least three args".to_string());
+    }
+    let mut it = args[1..].iter();
+    while let Some(n) = it.next() {
+        if n == &args[0] {
+            return it
+                .next()
+                .map(|m| m.clone())
+                .ok_or("Match doesn't have valid response".to_string());
+        }
+        it.next();
+    }
+    Err("match not found".to_string())
 }
