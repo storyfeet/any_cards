@@ -26,6 +26,13 @@ impl From<String> for StrErr {
     }
 }
 
+impl StrErr {
+    pub fn ext(mut self, s: &str) -> Self {
+        self.0.push_str(s);
+        self
+    }
+}
+
 fn main() -> Result<(), failure::Error> {
     let clp = clap_app!(any_cards =>
         (about:"Makes any kind of svg card using handlebars templates")
@@ -87,7 +94,9 @@ fn main() -> Result<(), failure::Error> {
         &mut mksvg::iter::spread(&all_cards, |c| c.num),
         &|wr, w, h, c| -> Result<(), StrErr> {
             let cw = go_temp::CWH::new(&c.name, w, h, &c.data);
-            let rs = template.render(&Context::from(cw)?)?;
+            let rs = template
+                .render(&Context::from(cw)?)
+                .map_err(|e| format!("{} on card {}:{:?}", e, c.name, c.data))?;
             wr.write(&rs);
             Ok(())
         },
