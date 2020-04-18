@@ -1,5 +1,5 @@
 use card_format::CData;
-use gtmpl::Template;
+//use gtmpl::Template;
 use gtmpl_value::{Number, Value};
 use std::collections::{BTreeMap, HashMap};
 
@@ -45,7 +45,7 @@ impl<'a> Into<Value> for CWH<'a> {
     }
 }
 
-pub fn helper_template() -> Template {
+/*pub fn helper_template() -> Template {
     let mut res = Template::default();
     res.add_func("mul", mul);
     res.add_func("add", add);
@@ -103,6 +103,7 @@ pub fn add(args: &[Value]) -> Result<Value, String> {
     }
     Ok(Value::Number(res))
 }
+
 pub fn wrap(args: &[Value]) -> Result<Value, String> {
     let s = match args.get(0) {
         Some(Value::String(s)) => s,
@@ -250,7 +251,7 @@ pub fn as_list(args: &[Value]) -> Result<Value, String> {
     Ok(Value::Array(res))
 }
 
-// first arg is seperator, after flatten
+/// first arg is seperator, after that flatten lists and add seperated by the separator
 pub fn sep(args: &[Value]) -> Result<Value, String> {
     if args.len() < 2 {
         return Err("Nothing to separate".to_string());
@@ -265,6 +266,7 @@ pub fn s_len(args: &[Value]) -> Result<Value, String> {
         res += match a {
             Value::Map(m) => m.len(),
             Value::Array(l) => l.len(),
+            Value::String(s) => s.len(),
             _ => 0,
         }
     }
@@ -286,4 +288,4 @@ pub fn v_match(args: &[Value]) -> Result<Value, String> {
         it.next();
     }
     Err("match not found".to_string())
-}
+}*/

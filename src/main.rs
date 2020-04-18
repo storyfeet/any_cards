@@ -1,7 +1,9 @@
 mod go_temp;
 use clap_conf::prelude::*;
 use failure::Fail;
-use gtmpl::Context;
+//use gtmpl::Context;
+use gtmpl::Template;
+use gtmpl_helpers::THelper;
 use std::io::Read;
 
 #[derive(Fail, Debug)]
@@ -51,7 +53,7 @@ fn main() -> Result<(), failure::Error> {
 
     let cfg = with_toml_env(&clp, &["any_conf.toml"]);
 
-    let mut template = go_temp::helper_template();
+    let mut template = Template::default().with_all();
 
     //TODO Read template in
     let tfname = cfg
@@ -95,7 +97,7 @@ fn main() -> Result<(), failure::Error> {
         &|wr, w, h, c| -> Result<(), StrErr> {
             let cw = go_temp::CWH::new(&c.name, w, h, &c.data);
             let rs = template
-                .render(&Context::from(cw)?)
+                .q_render(cw)
                 .map_err(|e| format!("{} on card {}:{:?}", e, c.name, c.data))?;
             wr.write(&rs);
             Ok(())
