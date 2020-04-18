@@ -11,7 +11,7 @@ dependencies = [
 
 [[package]]
 name = "any_cards"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "card_format",
  "clap_conf",
@@ -187,7 +187,7 @@ dependencies = [
 
 [[package]]
 name = "gtmpl_helpers"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "gtmpl",
  "gtmpl_value",
