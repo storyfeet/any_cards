@@ -44,16 +44,17 @@ fn main() -> Result<(), failure::Error> {
         (@arg template: -t + takes_value "Location of template file (config template)")
         (@arg files: -f + takes_value ... "location of files for cards (config files [...])")
         (@arg out_base: -o +takes_value "Location base for output files")
-        (@arg c_width:-w + takes_value "Card width")
-        (@arg c_height:-h+ takes_value "Card width")
-        (@arg n_width:-a + takes_value "Num Cards across per page")
-        (@arg n_height:-d + takes_value "Num Cards down per page")
+        (@arg c_width:-w --card_width + takes_value "Card width")
+        (@arg c_height:-h --card_height + takes_value "Card width")
+        (@arg n_width:-a +takes_value "Num Cards across per page")
+        (@arg n_height:-d +takes_value "Num Cards down per page")
+        (@arg margin: --margin +takes_value"Margin size")
     )
     .get_matches();
 
     let cfg = with_toml_env(&clp, &["any_conf.toml"]);
 
-    let mut template = Template::default().with_all();
+    let mut template = Template::default().with_defaults().with_exec();
 
     //TODO Read template in
     let tfname = cfg
@@ -81,16 +82,25 @@ fn main() -> Result<(), failure::Error> {
     let g_width: Option<usize> = cfg.grab().arg("n_width").conf("grid.width").t_done();
     let g_height: Option<usize> = cfg.grab().arg("n_height").conf("grid.height").t_done();
 
+    let margin: Option<f64> = cfg.grab().arg("margin").conf("page.margin").t_done();
+
     let mut f_base = obase.clone();
     f_base.push_str("f_");
     let mut svb = mksvg::page::Pages::build();
     if let (Some(w), Some(h)) = (c_width, c_height) {
+        println!("Setting card size = ({},{})", w, h);
         svb = svb.card_size(w, h);
     }
     if let (Some(w), Some(h)) = (g_width, g_height) {
-        println!("Grid loaded");
+        println!("Setting grid size = ({},{})", w, h);
         svb = svb.grid_size(w, h);
     }
+    if let Some(m) = margin {
+        println!("Setting margin = {}", m);
+        svb = svb.with_margin(m);
+    }
+
+    println!("Preparing cards");
     let (_, _pages) = svb.write_pages(
         f_base,
         &mut mksvg::iter::spread(&all_cards, |c| c.num),
