@@ -3,7 +3,9 @@
     />
 {{$w := .w}}
 {{$h := .h}}
+{{$c := .}}
+    <text {{xy (mul $w 0.5) (mul $h 0.9) }} text-anchor="middle" fill="black" {{font (mul $w 0.2) "Arial"}}>{{sep "," (to_list .n .n_of_type)}}</text>
 {{range $k , $v := (wrap .data.tx 6) -}}
-    <text x="{{mul $w 0.5}}" y ="{{add (mul $h 0.1) (mul 0.12 $k $w)}}" text-anchor="middle" fill="white" {{fnt (mul $w 0.1) "Arial"}}>{{$v}}</text>
+    <text {{xy (mul $w 0.5) (add (mul $h 0.1) (mul 0.12 $k $w))}} text-anchor="middle" fill="white" {{font (mul $w 0.1) "Arial"}}>{{$v}}</text>
 {{end}}
 

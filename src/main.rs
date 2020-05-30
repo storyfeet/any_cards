@@ -1,33 +1,50 @@
 mod go_temp;
 use clap_conf::prelude::*;
-use failure::Fail;
-//use gtmpl::Context;
+
+use thiserror::*;
+
 use gtmpl::Template;
 use gtmpl_helpers::THelper;
 use std::io::Read;
 
-#[derive(Fail, Debug)]
-#[fail(display = "{}{}", s, e)]
-pub struct QErr<E: Fail> {
+#[derive(Error, Debug)]
+#[error("{}{}", s, e)]
+pub struct QErr<E: std::error::Error> {
     e: E,
     s: String,
 }
-pub fn q_err<E: Fail>(s: &str, e: E) -> QErr<E> {
+pub fn q_err<E: std::error::Error>(s: &str, e: E) -> QErr<E> {
     QErr {
         s: s.to_string(),
         e,
     }
 }
 
-#[derive(Fail, Debug)]
-#[fail(display = "String Err{}", 0)]
+//Templates return a String as though an error
+#[derive(Error, Debug)]
 pub struct StrErr(String);
+impl std::fmt::Display for StrErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Template Error: {}", self.0)
+    }
+}
+
 impl From<String> for StrErr {
     fn from(s: String) -> Self {
         StrErr(s)
     }
 }
+/*impl From<std::io::Error> for StrErr {
+    fn from(e: std::io::Error) -> Self {
+        StrErr(e.to_string())
+    }
+}
 
+impl From<std::fmt::Error> for StrErr {
+    fn from(e: std::fmt::Error) -> Self {
+        StrErr(e.to_string())
+    }
+}*/
 impl StrErr {
     pub fn ext(mut self, s: &str) -> Self {
         self.0.push_str(s);
@@ -35,13 +52,14 @@ impl StrErr {
     }
 }
 
-fn main() -> Result<(), failure::Error> {
+fn main() -> anyhow::Result<()> {
     let clp = clap_app!(any_cards =>
         (about:"Makes any kind of svg card using handlebars templates")
         (version:crate_version!())
         (author:"Matthew Stoodley")
         (@arg config:-c +takes_value "Location of config file")
         (@arg template: -t + takes_value "Location of template file (config template)")
+        (@arg card: --card +takes_value "Description of card")
         (@arg files: -f + takes_value ... "location of files for cards (config files [...])")
         (@arg out_base: -o +takes_value "Location base for output files")
         (@arg c_width:-w --card_width + takes_value "Card width")
@@ -49,6 +67,7 @@ fn main() -> Result<(), failure::Error> {
         (@arg n_width:-a +takes_value "Num Cards across per page")
         (@arg n_height:-d +takes_value "Num Cards down per page")
         (@arg margin: --margin +takes_value"Margin size")
+        (@arg param: -p --params +takes_value ... "Set of param values to be shown on all cards")
     )
     .get_matches();
 
@@ -69,11 +88,24 @@ fn main() -> Result<(), failure::Error> {
     template.parse(tfs).map_err(|e| StrErr(e))?;
 
     let mut all_cards = Vec::new();
-    for fname in cfg.grab_multi().arg("files").conf("files").req()? {
-        let mut f = std::fs::File::open(&fname).map_err(|e| q_err(&format!("{:?}", fname), e))?;
-        let loaded_cards = card_format::load_cards(&mut f)
-            .map_err(|e| q_err(&format!("file = {:?}", fname), e))?;
-        all_cards.extend(loaded_cards);
+    if let Some(card_param) = cfg.grab().arg("card").conf("card").done() {
+        let cards = card_format::parse_cards(&card_param)?;
+        all_cards.extend(cards);
+    }
+
+    if let Some(cfiles) = cfg.grab_multi().arg("files").conf("files").done() {
+        for fname in cfiles {
+            let mut f =
+                std::fs::File::open(&fname).map_err(|e| q_err(&format!("{:?}", fname), e))?;
+            let loaded_cards = card_format::load_cards(&mut f)
+                .map_err(|e| q_err(&format!("file = {:?}", fname), e))?;
+            all_cards.extend(loaded_cards);
+        }
+    }
+    if all_cards.len() == 0 {
+        Err(StrErr(
+            "No cards supplied use -f for files or --cards to desribe card in input".to_string(),
+        ))?;
     }
 
     let obase = cfg.grab().arg("out_base").conf("out_base").def("out/");
@@ -103,13 +135,14 @@ fn main() -> Result<(), failure::Error> {
     println!("Preparing cards");
     let (_, _pages) = svb.write_pages(
         f_base,
-        &mut mksvg::iter::spread(&all_cards, |c| c.num),
-        &|wr, w, h, c| -> Result<(), StrErr> {
-            let cw = go_temp::CWH::new(&c.name, w, h, &c.data);
+        &mut mksvg::iter::spread_nc(&all_cards, |c| c.num),
+        &|wr, w, h, (c, n, n_t)| -> anyhow::Result<()> {
+            let cw = go_temp::CWH::new(&c.name, w, h, n, n_t, &c.data);
             let rs = template
                 .q_render(cw)
-                .map_err(|e| format!("{} on card {}:{:?}", e, c.name, c.data))?;
-            wr.write(&rs);
+                .map_err(|e| format!("{} on card {}:{:?}", e, c.name, c.data))
+                .map_err(|e| StrErr(e))?;
+            wr.write(&rs)?;
             Ok(())
         },
     )?;
