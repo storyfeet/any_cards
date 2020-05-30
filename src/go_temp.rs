@@ -18,6 +18,7 @@ pub struct CWH<'a> {
     w: f64,
     h: f64,
     data: &'a BTreeMap<String, CData>,
+    params: &'a BTreeMap<String, CData>,
 }
 impl<'a> CWH<'a> {
     pub fn new(
@@ -27,6 +28,7 @@ impl<'a> CWH<'a> {
         n: usize,
         n_of_type: usize,
         data: &'a BTreeMap<String, CData>,
+        params: &'a BTreeMap<String, CData>,
     ) -> Self {
         CWH {
             name,
@@ -35,6 +37,7 @@ impl<'a> CWH<'a> {
             n,
             n_of_type,
             data,
+            params,
         }
     }
 }
@@ -57,6 +60,11 @@ impl<'a> Into<Value> for CWH<'a> {
         }
         rmap.insert("data".to_string(), Value::Map(data));
 
+        let mut params = HashMap::new();
+        for (k, v) in self.params {
+            params.insert(k.to_string(), as_go_v(v));
+        }
+        rmap.insert("params".to_string(), Value::Map(params));
         let res = Value::Map(rmap);
 
         res

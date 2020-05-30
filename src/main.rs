@@ -1,8 +1,10 @@
 mod go_temp;
 use clap_conf::prelude::*;
+use std::collections::BTreeMap;
 
 use thiserror::*;
 
+use gobble::Parser;
 use gtmpl::Template;
 use gtmpl_helpers::THelper;
 use std::io::Read;
@@ -107,6 +109,15 @@ fn main() -> anyhow::Result<()> {
             "No cards supplied use -f for files or --cards to desribe card in input".to_string(),
         ))?;
     }
+    let mut params = BTreeMap::new();
+    if let Some(cparams) = cfg.grab_multi().arg("params").conf("params").done() {
+        for p in cparams {
+            let (k, v) = card_format::parse::props()
+                .parse_s(&p)
+                .map_err(|e| StrErr(format!("Param error on {} -- {}", p, e)))?;
+            params.insert(k, v);
+        }
+    }
 
     let obase = cfg.grab().arg("out_base").conf("out_base").def("out/");
     let c_width: Option<f64> = cfg.grab().arg("cwidth").conf("card.width").t_done();
@@ -137,7 +148,7 @@ fn main() -> anyhow::Result<()> {
         f_base,
         &mut mksvg::iter::spread_nc(&all_cards, |c| c.num),
         &|wr, w, h, (c, n, n_t)| -> anyhow::Result<()> {
-            let cw = go_temp::CWH::new(&c.name, w, h, n, n_t, &c.data);
+            let cw = go_temp::CWH::new(&c.name, w, h, n, n_t, &c.data, &params);
             let rs = template
                 .q_render(cw)
                 .map_err(|e| format!("{} on card {}:{:?}", e, c.name, c.data))
