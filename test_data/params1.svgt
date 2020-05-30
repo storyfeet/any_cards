@@ -1,1 +1,1 @@
-<text>{{.params.car}}--{{.data.tx}}</text>
+<text>{{.params.car}}--{{first .data.tx "poo"}}</text>

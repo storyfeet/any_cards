@@ -8,6 +8,7 @@ use gobble::Parser;
 use gtmpl::Template;
 use gtmpl_helpers::THelper;
 use std::io::Read;
+//use std::str::FromStr;
 
 #[derive(Error, Debug)]
 #[error("{}{}", s, e)]
@@ -63,13 +64,14 @@ fn main() -> anyhow::Result<()> {
         (@arg template: -t + takes_value "Location of template file (config template)")
         (@arg card: --card +takes_value "Description of card")
         (@arg files: -f + takes_value ... "location of files for cards (config files [...])")
+        (@arg blank: -b --blank +takes_value "The number of black cards")
         (@arg out_base: -o +takes_value "Location base for output files")
         (@arg c_width:-w --card_width + takes_value "Card width")
         (@arg c_height:-h --card_height + takes_value "Card width")
         (@arg n_width:-a +takes_value "Num Cards across per page")
         (@arg n_height:-d +takes_value "Num Cards down per page")
         (@arg margin: --margin +takes_value"Margin size")
-        (@arg param: -p --params +takes_value ... "Set of param values to be shown on all cards")
+        (@arg params: -p --params +takes_value ... "Set of param values to be shown on all cards")
     )
     .get_matches();
 
@@ -89,7 +91,14 @@ fn main() -> anyhow::Result<()> {
     tfile.read_to_string(&mut tfs)?;
     template.parse(tfs).map_err(|e| StrErr(e))?;
 
+    //--- LOADING CARDS ---
     let mut all_cards = Vec::new();
+
+    if let Some(b_num) = cfg.grab().arg("blank").conf("blank").done() {
+        let c = card_format::Card::build(String::new(), b_num.parse()?, BTreeMap::new());
+        all_cards.push(c);
+    }
+
     if let Some(card_param) = cfg.grab().arg("card").conf("card").done() {
         let cards = card_format::parse_cards(&card_param)?;
         all_cards.extend(cards);
@@ -118,6 +127,7 @@ fn main() -> anyhow::Result<()> {
             params.insert(k, v);
         }
     }
+    println!("Params == {:?}", params);
 
     let obase = cfg.grab().arg("out_base").conf("out_base").def("out/");
     let c_width: Option<f64> = cfg.grab().arg("cwidth").conf("card.width").t_done();
